@@ -1,6 +1,6 @@
 # CUDA-Accelerated Speculative Decoding Optimizer for LLM Inference
 
-[![Tests](https://img.shields.io/badge/tests-31%20passing-brightgreen)]()
+[![CI](https://github.com/ArchanaChetan07/CUDA-Accelerated-Speculative-Decoding-Optimizer-for-LLM-Inference-PyTorch-vLLM-/actions/workflows/ci.yml/badge.svg)](https://github.com/ArchanaChetan07/CUDA-Accelerated-Speculative-Decoding-Optimizer-for-LLM-Inference-PyTorch-vLLM-/actions/workflows/ci.yml)
 [![CUDA](https://img.shields.io/badge/CUDA-12.x-76B900?logo=nvidia)]()
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch)]()
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python)]()
@@ -64,7 +64,8 @@ and a CUDA kernel verified bit-exact against it:
    *filtered* (`plan & ~locked`) instead of triggering rollbacks. A conflict-penalty
    signal lets the scheduler defer a heavily-conflicting draft for one step.
 3. **Async KV restoration** — suspended draft contexts restore on a background CUDA
-   stream; the decode stream never waits.
+   stream from pinned host memory (PCIe transfers overlap with compute); the decode
+   stream never waits.
 
 ### Architecture
 
@@ -189,6 +190,16 @@ The test pyramid:
 - [ ] vLLM fork integration (attach `OptimizedDraftManager` at the proposer)
 - [ ] End-to-end A/B validation of rollback/latency/throughput targets
 - [ ] Multi-GPU draft coordination
+
+## Related Projects
+
+Part of a three-repo LLM inference optimization portfolio:
+
+- **[INT4 KV-Cache Quantization + Fused Flash-Attention Kernels](https://github.com/ArchanaChetan07/INT4-KV-Cache-Quantization-with-Fused-Flash-Attention-CUDA-Kernels-for-LLM-Serving)** —
+  warp-parallel fused attention, 3.9× kernel speedup, 4× KV compression (the deepest
+  kernel work in the portfolio)
+- **[GPU Memory-Aware Request Scheduler](https://github.com/ArchanaChetan07/GPU-Memory-Aware-Request-Scheduler-with-KV-Cache-Offloading-for-Multi-Tenant-LLM-Serving)** —
+  SLA-aware admission control with sub-millisecond KV offloading
 
 ## License
 
