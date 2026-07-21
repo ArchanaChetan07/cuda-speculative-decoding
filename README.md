@@ -31,6 +31,14 @@ All numbers below are measured in this repository and reproducible with the comm
 **Design targets** (pending end-to-end vLLM A/B validation): rollback rate 23% → 8%,
 P99 latency 187 ms → 164 ms, throughput +18–25% on multi-draft speculative workloads.
 
+<p align="center">
+  <img src="docs/assets/reference_op_latency.png" alt="Measured micro-benchmark latencies" width="640">
+</p>
+
+<p align="center">
+  <img src="docs/assets/design_targets.png" alt="Design targets pending vLLM A/B validation" width="760">
+</p>
+
 ---
 
 ## The Problem
@@ -58,25 +66,41 @@ and a CUDA kernel verified bit-exact against it:
 3. **Async KV restoration** — suspended draft contexts restore on a background CUDA
    stream; the decode stream never waits.
 
+### Architecture
+
+```mermaid
+flowchart TD
+    A["vLLM Engine Loop<br/>propose → verify → commit / rollback"]
+    B["vllm_integration.py<br/><b>OptimizedDraftManager</b><br/>rank_for_step · lock/unlock · plan_eviction"]
+    C["ops.py — backend dispatch"]
+    D["reference.py<br/>NumPy ground truth"]
+    E["csrc/*.cu + bindings.cpp<br/>6 CUDA kernels"]
+    A --> B --> C
+    C -->|CPU path| D
+    C -->|GPU path| E
+    D <-.->|"parity tests: must match bit-exact"| E
+    style B fill:#dbeafe,stroke:#0969da
+    style E fill:#dcfce7,stroke:#2da44e
 ```
-┌────────────────────────────────────────────────────────┐
-│                   vLLM Engine Loop                     │
-│   (propose  →  verify  →  commit / rollback)           │
-└──────────────────────┬─────────────────────────────────┘
-                       │
-┌──────────────────────▼─────────────────────────────────┐
-│   vllm_integration.py — OptimizedDraftManager          │
-│   rank_for_step() · lock/unlock · plan_eviction()      │
-└──────────────────────┬─────────────────────────────────┘
-                       │
-┌──────────────────────▼─────────────────────────────────┐
-│   ops.py — dispatch (CUDA ext ⇄ NumPy reference)       │
-└──────────┬──────────────────────────────┬──────────────┘
-           │                              │
-┌──────────▼──────────┐      ┌────────────▼─────────────┐
-│  reference.py       │ must │  csrc/*.cu + bindings    │
-│  NumPy ground truth │◄────►│  6 CUDA kernels          │
-└─────────────────────┘ match└──────────────────────────┘
+
+### One speculative step
+
+```mermaid
+sequenceDiagram
+    participant E as Engine
+    participant M as DraftManager
+    participant G as GPU kernels
+    E->>M: rank_for_step()
+    M->>G: rank_drafts (EMA confidence)
+    G-->>M: deterministic draft order
+    M->>G: soft_lock(primary draft's KV blocks)
+    E->>M: plan_eviction(secondary draft plans)
+    M->>G: detect_conflict (bitmask AND)
+    G-->>E: filtered plan + conflict penalty
+    Note over E: verify drafts (unchanged vLLM path)<br/>no rollback — conflicts were filtered, not hit
+    E->>M: record_outcome(draft, accepted)
+    M->>G: soft_unlock all
+    Note over G: suspended contexts restore on a<br/>background stream, decode never waits
 ```
 
 ---
