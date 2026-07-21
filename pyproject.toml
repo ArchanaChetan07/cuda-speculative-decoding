@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel", "torch"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spec-decode-optimizer"
+version = "0.1.0"
+description = "Speculative Decoding Optimizer: CUDA kernels for conflict-free KV cache eviction"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Speculative Decoding Team", email = "team@example.com"}
+]
+keywords = ["cuda", "llm", "serving", "speculative-decoding", "kv-cache", "optimization"]
+
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "isort>=5.0",
+    "mypy>=1.0",
+]
+cuda = [
+    "torch>=2.0.0",  # with CUDA support
+]
+
+[tool.setuptools]
+packages = ["spec_decode_opt"]
+package-dir = {"spec_decode_opt" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--verbose --tb=short"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

@@ -1,0 +1,21 @@
+{
+  "backend": "cuda",
+  "benchmarks": [
+    {
+      "op": "draft_ranking",
+      "num_drafts": 8,
+      "ms_per_call": 0.0017038000514730811
+    },
+    {
+      "op": "conflict_detection",
+      "num_blocks": 1024,
+      "ms_per_call": 0.004653100040741265
+    },
+    {
+      "op": "eviction_scores",
+      "num_blocks": 256,
+      "seq_len": 2048,
+      "ms_per_call": 0.8411999989766628
+    }
+  ]
+}

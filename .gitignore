@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# CUDA / build artifacts
+*.o
+*.obj
+*.so
+*.pyd
+*.cubin
+*.fatbin
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Model weights
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Session-local files (not part of the project)
+DOWNLOAD-FILES.txt
